@@ -11,6 +11,12 @@ import SwiftUI
 struct CryptoApp: App {
     @UIApplicationDelegateAdaptor(AppDelegate.self) var appDelegate
 
+    init() {
+        UINavigationBar.appearance().largeTitleTextAttributes =  [.foregroundColor:Color.theme.accent]
+        UINavigationBar.appearance().titleTextAttributes =  [.foregroundColor:Color.theme.accent]
+
+    }
+    
     var body: some Scene {
         WindowGroup {
             NavigationStack{

@@ -16,8 +16,15 @@ struct Home: View {
             Color.theme.background
                 .ignoresSafeArea()
             
+                .sheet(isPresented: $showPorifilo,content: {
+                    PortfolioView(vm:vm)
+                })
+            
             VStack{
                 headerView
+                HomeStatView(vm: vm, showPortforlio: $showPorifilo)
+                
+                CustomSearchBarView(searchTxt: $vm.searchTxt)
                 
                 columnTitlesView
                 

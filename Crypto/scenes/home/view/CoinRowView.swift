@@ -25,6 +25,8 @@ struct CoinRowView: View {
             
             
         }
+        .frame(height: 70)
+
     }
 }
 
