@@ -10,6 +10,8 @@ import SwiftUI
 struct DetailScene: View {
     @Binding var coin:CoinModel
     @StateObject var vm:DetailViewModel
+    @State var showFullDesc:Bool=false
+
     let columns:[GridItem] = [
         .init(.flexible()),
         .init(.flexible())
@@ -22,21 +24,35 @@ struct DetailScene: View {
     
     var body: some View {
         ScrollView{
-            VStack(spacing:20){
-                Text("")
-                    .frame(height:150)
-                
-                overviewTitle
-                Divider()
-                overviewGrid
-                
-                
-                additionalTitle
-                Divider()
-                
-                additionalGrid
+            
+            VStack{
+                ChartView(coin: vm.coin)
+                    .padding(.vertical)
+                VStack(spacing:20){
+                   
+                    overviewTitle
+                    Divider()
+                    
+                   descSection
+                    
+                    overviewGrid
+                    
+                    
+                    additionalTitle
+                    Divider()
+                    
+                    additionalGrid
+                    
+                   websiteSection
+                }
+                .padding()
             }
-            .padding()
+        }
+        .toolbar {
+            
+            ToolbarItem(placement: .topBarTrailing) {
+                trailingNavBarBTN
+            }
         }
     }
 }
@@ -81,5 +97,61 @@ extension DetailScene{
                 StatisticsView(stat:stat)
             }
         }
+    }
+    private var trailingNavBarBTN:some View{
+        HStack{
+            Text(vm.coin.symbol.uppercased())
+                .font(.headline)
+                .foregroundStyle(Color.theme.secondaryText)
+            CoinRowView(coin: vm.coin, showHoldingColumn: false)
+                .frame(width: 25,height: 25)
+        }
+    }
+    
+    private var descSection:some View{
+        ZStack{
+            if let coinDesc=vm.coinDesc,!coinDesc.isEmpty{
+                VStack{
+                    Text(coinDesc)
+                        .lineLimit(showFullDesc ? .none : 3)
+                        .font(.callout)
+                        .foregroundStyle(Color.theme.secondaryText)
+                    
+                    Button {
+                        withAnimation(.easeInOut){
+                            showFullDesc.toggle()
+                        }
+                    } label: {
+                        Text(showFullDesc ? "Less More" : "Read More")
+                            .font(.caption)
+                            .fontWeight(.bold)
+                            .padding(.vertical,4)
+                        
+                    }
+                    .accentColor(.blue)
+                    
+                }
+//                .frame(minWidth: .infinity,  alignment: .leading)
+            }
+        }
+    }
+    
+    private var websiteSection:some View{
+        VStack(alignment: .leading,spacing: 20) {
+            if let websiteUrl=vm.websiteUrl,!websiteUrl.isEmpty,let url = URL(string: websiteUrl){
+                
+                Link("Website", destination: url)
+                
+            }
+            
+            if let redditString=vm.redditUrl,!redditString.isEmpty,let url = URL(string: redditString){
+                Link("Reddit", destination: url)
+                
+            }
+            
+        }
+        .accentColor(.blue)
+        .frame(maxWidth:.infinity,alignment: .leading)
+        .font(.headline)
     }
 }

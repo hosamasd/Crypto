@@ -45,6 +45,8 @@ extension Double {
         let formatter = NumberFormatter()
         formatter.usesGroupingSeparator = true
         formatter.numberStyle = .currency
+        formatter.currencyCode = "usd"
+        formatter.currencySymbol = "$"
         //formatter.locale = .current // <- default value
         //formatter.currencyCode = "usd" // <- change currency
         //formatter.currencySymbol = "$" // <- change currency symbol

@@ -25,6 +25,7 @@ class CoinDetailService {
         
          coinDetailSubscription =  NetworkManager.download(url: url)
             .decode(type: CoinDetailModel.self, decoder: JSONDecoder())
+            .receive(on: DispatchQueue.main)
             .sink(receiveCompletion: NetworkManager.handleCompletion(completion:), receiveValue: {[weak self] coins in
                 guard let self = self else { return  }
                 self.coinDetail=coins

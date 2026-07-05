@@ -34,8 +34,19 @@ struct Home: View {
                     allCoinView
                         .transition(.move(edge: .leading))
                 }else{
-                    portfolioCoinView
-                        .transition(.move(edge: .trailing))
+                    ZStack(alignment: .top) {
+                        if vm.portfolioCoins.isEmpty && vm.searchTxt.isEmpty {
+                            emptyPortfolio
+//                            if vm.portfolioCoins.isEmpty && !vm.searchTxt.isEmpty {
+//                                emptyPortfolioNoData
+//                            }
+                        }else{
+                            portfolioCoinView
+                                .transition(.move(edge: .trailing))
+                        }
+                        
+                    }
+                    
                     
                 }
                 Spacer()
@@ -168,4 +179,22 @@ extension Home{
         .foregroundStyle(Color.theme.secondaryText)
         .padding(.horizontal)
     }
+    
+    private var emptyPortfolio:some View{
+        Text("You haven't added any coins to your porfolio yet!. Please add coin first.")
+            .font(.callout)
+            .foregroundStyle(Color.theme.accent)
+            .fontWeight(.medium)
+            .multilineTextAlignment(.center)
+            .padding(50)
+    }
+    private var emptyPortfolioNoData:some View{
+        Text("No data founded.")
+            .font(.callout)
+            .foregroundStyle(Color.theme.accent)
+            .fontWeight(.medium)
+            .multilineTextAlignment(.center)
+            .padding(50)
+    }
+    
 }

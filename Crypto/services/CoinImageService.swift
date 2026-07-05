@@ -39,6 +39,7 @@ class CoinImageService {
             .tryMap({ (data) ->UIImage? in
                 return UIImage(data: data)
             })
+            .receive(on: DispatchQueue.main)
             .sink(receiveCompletion: NetworkManager.handleCompletion(completion:), receiveValue: {[weak self] img in
                 guard let self = self,let downloadedImg=img else { return  }
                 self.image=img
