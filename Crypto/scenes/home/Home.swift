@@ -18,45 +18,48 @@ struct Home: View {
             Color.theme.background
                 .ignoresSafeArea()
             
+         
+            
                 .sheet(isPresented: $editPorifilo,content: {
                     PortfolioView(vm:vm)
                 })
             
-            VStack{
-                headerView
-                HomeStatView(vm: vm, showPortforlio: $showPorifilo)
-                
-                CustomSearchBarView(searchTxt: $vm.searchTxt)
-                
-                columnTitlesView
-                
-                if !showPorifilo{
-                    allCoinView
-                        .transition(.move(edge: .leading))
-                }else{
-                    ZStack(alignment: .top) {
-                        if vm.portfolioCoins.isEmpty && vm.searchTxt.isEmpty {
-                            emptyPortfolio
-//                            if vm.portfolioCoins.isEmpty && !vm.searchTxt.isEmpty {
-//                                emptyPortfolioNoData
-//                            }
-                        }else{
-                            portfolioCoinView
-                                .transition(.move(edge: .trailing))
+            if !vm.isLoading{
+                VStack{
+                    headerView
+                    HomeStatView(vm: vm, showPortforlio: $showPorifilo)
+                    
+                    CustomSearchBarView(searchTxt: $vm.searchTxt)
+                    
+                    columnTitlesView
+                    
+                    if !showPorifilo{
+                        allCoinView
+                            .transition(.move(edge: .leading))
+                    }else{
+                        ZStack(alignment: .top) {
+                            if vm.portfolioCoins.isEmpty && vm.searchTxt.isEmpty {
+                                emptyPortfolio
+                                //                            if vm.portfolioCoins.isEmpty && !vm.searchTxt.isEmpty {
+                                //                                emptyPortfolioNoData
+                                //                            }
+                            }else{
+                                portfolioCoinView
+                                    .transition(.move(edge: .trailing))
+                            }
+                            
                         }
                         
+                        
                     }
-                    
-                    
+                    Spacer()
                 }
-                Spacer()
+            }else{
+                ArcView()
+                    .opacity(vm.isLoading ? 1 : 0)
             }
-            
-        }
-        .background(EmptyView()
-            .fullScreenCover(isPresented: $isShowDetail, content: {
-                DetailScene(coin: $vm.selectedCoin)
-            }))
+         }
+      
     }
 }
 
@@ -68,6 +71,38 @@ struct Home: View {
 }
 
 extension Home{
+    
+    func getFullText() -> String {
+        vm.selectedCurrency.count > 0 ? "Currency \n"+vm.selectedCurrency.uppercased() : "Change Currency"
+    }
+    
+    private var showCurrencyList:some View{
+        Menu(getFullText()) {
+            ForEach(vm.supportedVSCurrencies.indices){index in
+                
+               
+                    
+                    Button(vm.supportedVSCurrencies[index])
+                    {
+                        
+                        withAnimation(.spring){
+                            vm.selectedCurrency=vm.supportedVSCurrencies[index]
+                            vm.searchTxt=""
+                            vm.allCoins=[]
+                            vm.portfolioCoins=[]
+                            vm.reloadData()
+                            //                            vm.coinDataService.getCoins(selectedCurrency: vm.selectedCurrency)
+                            //                            vm.marketDataService.getMarket()
+                            //                            vm.addSubscribers()
+                            
+                        }
+                    }
+                
+            }
+        }
+        
+    }
+    
     private var headerView:some View{
         HStack{
             CircleBTN(iconName:showPorifilo ? "plus":"info")
@@ -79,7 +114,9 @@ extension Home{
                         self.editPorifilo.toggle()
                     }
                 }
-            
+            if vm.supportedVSCurrencies.count > 0 && !showPorifilo{
+                showCurrencyList
+            }
             Spacer()
             Text(showPorifilo ? "Portfolio":"BitCoin")
                 .font(.headline)
@@ -100,18 +137,23 @@ extension Home{
     private var allCoinView:some View{
         List{
             ForEach(vm.allCoins){coin in
-                CoinRowView(coin: coin, showHoldingColumn: false)
-                    .listRowInsets(.init(top: 0, leading: 0, bottom: 0, trailing: 10))
-                    .onTapGesture {
-                        withAnimation(.default){
-                            vm.selectedCoin=coin
-                            isShowDetail=true
+                NavigationLink(value: coin) {
+                    CoinRowView(coin: coin, showHoldingColumn: false)
+                        .listRowInsets(.init(top: 0, leading: 0, bottom: 0, trailing: 10))
+                        .onTapGesture {
+                            withAnimation(.default){
+                                vm.selectedCoin=coin
+//                                isShowDetail=true
+                            }
                         }
-                    }
+                }
                 
             }
         }
         .listStyle(PlainListStyle())
+        .navigationDestination(for: CoinModel.self) { coin in
+            DetailScene(coin: .constant(coin))
+            }
     }
     private var portfolioCoinView:some View{
         List{

@@ -15,14 +15,16 @@ class HomeViewModel: ObservableObject {
     @Published var isLoading:Bool=false
     @Published var sortOption:SortOptions = .holdings
     @Published var selectedCoin:CoinModel=CoinModel(id: "", symbol: "", name: "", image: "", currentPrice: 0.0, marketCap: 0, marketCapRank: 0, fullyDilutedValuation: 0, totalVolume: 0, high24H: 0, low24H: 0, priceChange24H: 0, priceChangePercentage24H: 0, marketCapChange24H: 0, marketCapChangePercentage24H: 0, circulatingSupply: 0, totalSupply: 0, maxSupply: 0, ath: 0, athChangePercentage: 0, athDate: "", atl: 0, atlChangePercentage: 0, atlDate: "", lastUpdated: "", sparklineIn7D: nil, priceChangePercentage24HInCurrency: 0, currentHoldings: 0   )
-
+    @Published var supportedVSCurrencies:[String]=[]
+    @Published var selectedCurrency:String=""
+    @Published var isGetAllCuurencies:Bool=false
 
     @Published  var statistics:[StatisticModel] = [ ]
     
     private var cancelllable = Set<AnyCancellable>()
-    private let coinDataService=CoinDataServices()
-    private let marketDataService=MarketDataService()
-    private let portfolioDataService=PortfolioDataService()
+     let coinDataService=CoinDataServices()
+     let marketDataService=MarketDataService()
+     let portfolioDataService=PortfolioDataService()
 
     enum SortOptions {
     case price,priceReversed,rank,rankReversed,holdings,holdingsReversed
@@ -31,13 +33,15 @@ class HomeViewModel: ObservableObject {
         addSubscribers()
     }
     
+    
+    
     func addSubscribers()  {
         //        dataService.$allCoins
         //            .sink { returnedVal in
         //                self.allCoins=returnedVal
         //            }
         //            .store(in: &cancelllable)
-        
+        isLoading=true
         $searchTxt
             .combineLatest(coinDataService.$allCoins,$sortOption)
             .debounce(for: .seconds(0.5), scheduler: DispatchQueue.main)
@@ -67,8 +71,19 @@ class HomeViewModel: ObservableObject {
             }
             .store(in: &cancelllable)
         
-      
-        
+        if !isGetAllCuurencies {
+            
+       
+        coinDataService.$supportedVSCurrencies
+            .combineLatest($supportedVSCurrencies)
+            .map(getCurrenciesData)
+            .sink {[weak self] (returnedCurrencies) in
+                guard let self=self else{return}
+                self.supportedVSCurrencies=returnedCurrencies
+                self.isGetAllCuurencies=true
+            }
+            .store(in: &cancelllable)
+        }
     }
     
     func updatePortfolio(coin: CoinModel, amount: Double)  {
@@ -77,6 +92,7 @@ class HomeViewModel: ObservableObject {
     
     func reloadData()  {
         isLoading=true
+//        selectedCurrency="usd"
         coinDataService.getCoins()
         marketDataService.getMarket()
         HapticManager.notification(type: .success)
@@ -86,6 +102,11 @@ class HomeViewModel: ObservableObject {
         var updatedCoins = filterCoins(text: text, coins: coins)
         sortCoins(sortOption: sortOption, coins: &updatedCoins)
         return updatedCoins
+    }
+    
+    private func getCurrenciesData(serviceCurrencies: [String],
+                                   localCurrencies: [String]) -> SupportedVSCurrencies{
+        return serviceCurrencies
     }
     
     private func filterCoins(text:String,coins:[CoinModel]) ->[CoinModel]{

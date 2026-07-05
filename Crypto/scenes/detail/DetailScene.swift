@@ -48,12 +48,14 @@ struct DetailScene: View {
                 .padding()
             }
         }
+
         .toolbar {
-            
             ToolbarItem(placement: .topBarTrailing) {
                 trailingNavBarBTN
             }
         }
+        .navigationTitle(coin.name)
+
     }
 }
 
@@ -103,8 +105,11 @@ extension DetailScene{
             Text(vm.coin.symbol.uppercased())
                 .font(.headline)
                 .foregroundStyle(Color.theme.secondaryText)
-            CoinRowView(coin: vm.coin, showHoldingColumn: false)
+//                .padding(.leading,-30)
+            
+            CoinImageScene(coin: vm.coin)
                 .frame(width: 25,height: 25)
+                .fixedSize()
         }
     }
     
