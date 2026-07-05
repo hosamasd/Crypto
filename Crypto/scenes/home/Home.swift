@@ -10,13 +10,14 @@ import SwiftUI
 struct Home: View {
     @State private var showPorifilo=false
     @StateObject var vm=HomeViewModel()
-    
+    @State private var editPorifilo=false
+
     var body: some View {
         ZStack{
             Color.theme.background
                 .ignoresSafeArea()
             
-                .sheet(isPresented: $showPorifilo,content: {
+                .sheet(isPresented: $editPorifilo,content: {
                     PortfolioView(vm:vm)
                 })
             
@@ -56,6 +57,11 @@ extension Home{
             CircleBTN(iconName:showPorifilo ? "plus":"info")
                 .background {
                     CircleBTNAnimationView(animate: $showPorifilo)
+                }
+                .onTapGesture {
+                    withAnimation(.spring) {
+                        self.editPorifilo.toggle()
+                    }
                 }
             
             Spacer()
@@ -98,13 +104,54 @@ extension Home{
     private var columnTitlesView:some View{
         
         HStack{
-            Text("Coin")
-            Spacer()
-            if showPorifilo{
-                Text("Hoildays")
+            HStack{
+                Text("Coin")
+                Image(systemName: "chevron.down")
+                    .opacity((vm.sortOption == .rank || vm.sortOption == .rankReversed) ? 1 : 0)
+                    .rotationEffect(Angle(degrees: vm.sortOption == .rank ? 0 : 180))
             }
+            .onTapGesture {
+                withAnimation(.default) {
+                    vm.sortOption = vm.sortOption == .rank ? .rankReversed : .rank
+                }
+            }
+                Spacer()
+            if showPorifilo{
+                HStack{
+                Text("Hoildays")
+                    Image(systemName: "chevron.down")
+                        .opacity((vm.sortOption == .holdings || vm.sortOption == .holdingsReversed) ? 1 : 0)
+                        .rotationEffect(Angle(degrees: vm.sortOption == .holdings ? 0 : 180))
+                }
+                .onTapGesture {
+                    withAnimation(.default) {
+                        vm.sortOption = vm.sortOption == .holdings ? .holdingsReversed : .holdings
+                    }
+                }
+            }
+            HStack{
             Text("Price")
-                .frame(width: getFrameSize().width/3,alignment: .trailing)
+                Image(systemName: "chevron.down")
+                    .opacity((vm.sortOption == .price || vm.sortOption == .priceReversed) ? 1 : 0)
+                    .rotationEffect(Angle(degrees: vm.sortOption == .price ? 0 : 180))
+
+            }
+            .frame(width: getFrameSize().width/3,alignment: .trailing)
+            .onTapGesture {
+                withAnimation(.default) {
+                    vm.sortOption = vm.sortOption == .price ? .priceReversed : .price
+                }
+            }
+            
+            Button {
+                withAnimation(.linear(duration: 2.0)) {
+                    vm.reloadData()
+                }
+            } label: {
+                Image(systemName: "goforward")
+            }
+            .rotationEffect(Angle(degrees: vm.isLoading ? 360 : 0), anchor: .center)
+
         }
         .font(.caption)
         .foregroundStyle(Color.theme.secondaryText)

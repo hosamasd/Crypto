@@ -6,23 +6,22 @@
 //
 
 import SwiftUI
-
 struct PortfolioView: View {
-    @ObservedObject var vm:HomeViewModel
-    @State private var selectedCoin:CoinModel?=nil
-    @State private var quantitText=""
-    @State private var showCheckMark=false
-    
+    @ObservedObject var vm: HomeViewModel
+    @State private var selectedCoin: CoinModel? = nil
+    @State private var quantitText = ""
+    @State private var showCheckMark = false
     
     var body: some View {
-        NavigationStack{
-            ScrollView{
-                VStack(alignment: .leading,spacing: 0){
+        NavigationStack {
+            ScrollView {
+                VStack(alignment: .leading, spacing: 0) {
                     CustomSearchBarView(searchTxt: $vm.searchTxt)
                     coinLogoList
                     
-                    porfolioInputSection
-                    
+                    if selectedCoin != nil{
+                        porfolioInputSection
+                    }
                 }
             }
             .navigationTitle("Edit Portfolio")
@@ -35,77 +34,87 @@ struct PortfolioView: View {
                 }
             }
         }
+        .onChange(of: vm.searchTxt) { _ in
+            if vm.searchTxt == "" {
+                removeSelectedCoin()
+            }
+        }
     }
     
-    func getCurrentValue() ->Double {
-        if let qunatity=Double(quantitText){
-            return qunatity*(selectedCoin?.currentPrice ?? 0)
+    func getCurrentValue() -> Double {
+        if let quantity = Double(quantitText) {
+            return quantity * (selectedCoin?.currentPrice ?? 0)
         }
         return 0.0
     }
 }
 
-#Preview {
-    PortfolioView(vm: HomeViewModel())
-}
-extension PortfolioView{
-    private var coinLogoList: some View{
-        ScrollView(.horizontal,showsIndicators: false){
-            LazyHStack(spacing:10){
-                ForEach(vm.allCoins){coin in
+extension PortfolioView {
+    private var coinLogoList: some View {
+        ScrollView(.horizontal, showsIndicators: false) {
+            LazyHStack(spacing: 10) {
+                ForEach(vm.searchTxt.isEmpty ? vm.portfolioCoins : vm.allCoins) { coin in
                     CoinLogoView(coion: coin)
                         .frame(width: 75)
                         .padding(4)
                         .onTapGesture {
-                            withAnimation(.easeInOut) {
-                                selectedCoin=coin
+                            withAnimation(.easeInOut) {   // ✅ FIXED
+                                updateSelectedCoin(coin:coin)
+                                
                             }
                         }
                         .background {
                             RoundedRectangle(cornerRadius: 10)
-                                .stroke(selectedCoin?.id==coin.id ? Color.theme.green : .clear,lineWidth:1)
+                                .stroke(selectedCoin?.id == coin.id ? Color.theme.green : .clear, lineWidth: 1)
                         }
                 }
             }
-            .frame(height:120)
+            .frame(height: 120)
             .padding(.trailing)
         }
     }
     
-    private var porfolioInputSection: some View{
+    func updateSelectedCoin(coin:CoinModel)  {
         
-            VStack(spacing:20){
-                HStack{
-                    Text("Current Price of \(selectedCoin?.symbol.uppercased()):")
-                    Spacer()
-                    Text(selectedCoin?.currentPrice.asCurrencyWith6Decimals() ?? "")
-                }
-                
-                Divider()
-                HStack{
-                    Text("Amount in your portfolio:")
-                    Spacer()
-                    TextField("EX: 1.4", text: $quantitText)
-                        .multilineTextAlignment(.trailing)
-                        .keyboardType(.decimalPad)
-                }
-                Divider()
-                HStack{
-                    Text("Current Value:")
-                    Spacer()
-                    Text(getCurrentValue().asCurrencyWith2Decimals())
-                }
-                
-            }
-            .animation(.none)
-            .padding()
-            .font(.headline)
+        selectedCoin = coin
+        if let portfolioCoin = vm.portfolioCoins.first { $0.id==coin.id },let amount=portfolioCoin.currentHoldings{
+            quantitText="\(amount)"
+        }else{
+            quantitText=""
+        }
+        
         
     }
     
-    private var trailingNavBarBTN: some View{
-        
-        HStack(spacing:10){
+    private var porfolioInputSection: some View {
+        VStack(spacing: 20) {
+            HStack {
+                Text("Current Price of \(selectedCoin?.symbol.uppercased() ?? ""):")
+                Spacer()
+                Text(selectedCoin?.currentPrice.asCurrencyWith6Decimals() ?? "")
+            }
+            
+            Divider()
+            HStack {
+                Text("Amount in your portfolio:")
+                Spacer()
+                TextField("EX: 1.4", text: $quantitText)
+                    .multilineTextAlignment(.trailing)
+                    .keyboardType(.decimalPad)
+            }
+            Divider()
+            HStack {
+                Text("Current Value:")
+                Spacer()
+                Text(getCurrentValue().asCurrencyWith2Decimals())
+            }
+        }
+        .padding()
+        .font(.headline)
+    }
+    
+    private var trailingNavBarBTN: some View {
+        HStack(spacing: 10) {
             Image(systemName: "checkmark")
                 .opacity(showCheckMark ? 1.0 : 0.0)
             
@@ -115,29 +124,30 @@ extension PortfolioView{
                 Text("Save".uppercased())
             }
             .opacity((selectedCoin != nil && selectedCoin?.currentHoldings != Double(quantitText)) ? 1.0 : 0.0)
-            
         }
         .font(.headline)
     }
     
-    func saveBTNPressed()  {
-        guard let coin = selectedCoin else { return  }
+    func saveBTNPressed() {
+        guard let coin = selectedCoin,let amount=Double(quantitText) else { return }
         
+        vm.updatePortfolio(coin: coin, amount: amount)
         
-        withAnimation(.easeIn) {
-            showCheckMark=true
+        withAnimation(.easeIn) {               // ✅ FIXED
+            showCheckMark = true
             removeSelectedCoin()
         }
         hideKeyboard()
-        DispatchQueue.main.asyncAfter(deadline: DispatchTime.now()+2.0, execute: {
-            withAnimation(.easeOut) {
-                showCheckMark=false
+        
+        DispatchQueue.main.asyncAfter(deadline: .now() + 2.0) {
+            withAnimation(.easeOut) {          // ✅ FIXED
+                showCheckMark = false
             }
-        })
+        }
     }
     
-    func removeSelectedCoin()  {
-        selectedCoin=nil
+    func removeSelectedCoin() {
+        selectedCoin = nil
         vm.searchTxt = ""
     }
 }

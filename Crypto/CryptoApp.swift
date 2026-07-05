@@ -10,12 +10,14 @@ import SwiftUI
 @main
 struct CryptoApp: App {
     @UIApplicationDelegateAdaptor(AppDelegate.self) var appDelegate
-
+    
     init() {
-        UINavigationBar.appearance().largeTitleTextAttributes =  [.foregroundColor:Color.theme.accent]
-        UINavigationBar.appearance().titleTextAttributes =  [.foregroundColor:Color.theme.accent]
-
-    }
+//            UINavigationBar.appearance().tintColor = Color.theme.accent
+            UINavigationBar.appearance().barTintColor = UIColor(Color.theme.background)
+            UINavigationBar.appearance().standardAppearance.backgroundColor = UIColor(Color.theme.background)
+            UINavigationBar.appearance().compactAppearance?.backgroundColor = UIColor(Color.theme.background)
+            UINavigationBar.appearance().scrollEdgeAppearance?.backgroundColor = UIColor(Color.theme.background)
+        }
     
     var body: some Scene {
         WindowGroup {
