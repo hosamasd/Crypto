@@ -11,7 +11,8 @@ struct Home: View {
     @State private var showPorifilo=false
     @StateObject var vm=HomeViewModel()
     @State private var editPorifilo=false
-
+    @State var isShowDetail=false
+    
     var body: some View {
         ZStack{
             Color.theme.background
@@ -41,6 +42,10 @@ struct Home: View {
             }
             
         }
+        .background(EmptyView()
+            .fullScreenCover(isPresented: $isShowDetail, content: {
+                DetailScene(coin: $vm.selectedCoin)
+            }))
     }
 }
 
@@ -86,8 +91,14 @@ extension Home{
             ForEach(vm.allCoins){coin in
                 CoinRowView(coin: coin, showHoldingColumn: false)
                     .listRowInsets(.init(top: 0, leading: 0, bottom: 0, trailing: 10))
+                    .onTapGesture {
+                        withAnimation(.default){
+                            vm.selectedCoin=coin
+                            isShowDetail=true
+                        }
+                    }
+                
             }
-            
         }
         .listStyle(PlainListStyle())
     }
@@ -115,10 +126,10 @@ extension Home{
                     vm.sortOption = vm.sortOption == .rank ? .rankReversed : .rank
                 }
             }
-                Spacer()
+            Spacer()
             if showPorifilo{
                 HStack{
-                Text("Hoildays")
+                    Text("Hoildays")
                     Image(systemName: "chevron.down")
                         .opacity((vm.sortOption == .holdings || vm.sortOption == .holdingsReversed) ? 1 : 0)
                         .rotationEffect(Angle(degrees: vm.sortOption == .holdings ? 0 : 180))
@@ -130,11 +141,11 @@ extension Home{
                 }
             }
             HStack{
-            Text("Price")
+                Text("Price")
                 Image(systemName: "chevron.down")
                     .opacity((vm.sortOption == .price || vm.sortOption == .priceReversed) ? 1 : 0)
                     .rotationEffect(Angle(degrees: vm.sortOption == .price ? 0 : 180))
-
+                
             }
             .frame(width: getFrameSize().width/3,alignment: .trailing)
             .onTapGesture {
@@ -151,7 +162,7 @@ extension Home{
                 Image(systemName: "goforward")
             }
             .rotationEffect(Angle(degrees: vm.isLoading ? 360 : 0), anchor: .center)
-
+            
         }
         .font(.caption)
         .foregroundStyle(Color.theme.secondaryText)
